@@ -81,7 +81,7 @@ impl Down {
             Down::Dropped => (Status::Connecting, "Connection lost. Reconnecting…"),
             Down::AuthMissing => (
                 Status::Problem,
-                "Password needed. Enter it in Settings → Integrations → OBS Studio (OBS: Tools → WebSocket Server Settings → Show Connect Info).",
+                "Password needed. Enter it in Plugins → OBS Studio (OBS: Tools → WebSocket Server Settings → Show Connect Info).",
             ),
             Down::AuthFailed => (
                 Status::Problem,

@@ -24,7 +24,7 @@ ulanzictl plugin install ~/obs-plugin
 In OBS, turn on Tools → WebSocket Server Settings → Enable WebSocket server. Show Connect Info gives the
 port and password.
 
-Or build one file and install it from the app (Settings → Integrations → Install Plugin…, Developer Mode
+Or build one file and install it from the app (Plugins → Install Plugin…, Developer Mode
 on) or with `ulanzictl plugin install`:
 
 ```sh
@@ -33,7 +33,7 @@ scripts/package-plugin.sh plugins/obs     # writes dist/plugins/obs-<version>.ul
 
 ## Settings
 
-Open Settings → Integrations → OBS Studio in the app and fill in the address, port and password. The password
+Open Plugins → OBS Studio in the app (the puzzle button in the top bar) and fill in the address, port and password. The password
 goes straight into the plugin's secret store.
 
 ### Without the app
@@ -52,7 +52,7 @@ password = "..."        # only for the first start, see below
 
 The password is saved in the system keyring on the first start. After that, delete the `password` line
 and reload again: the plugin logs a warning on every start that still finds it. Until you delete the line,
-or type a password under Settings → Integrations → OBS Studio (which removes the line), the password sits
+or type a password under Plugins → OBS Studio (which removes the line), the password sits
 in plain text in `settings.toml` and in the local backups of it. D-Bus `GetSettings` shows it as `••••`
 and settings exports leave it out. The `forget_password` action deletes the saved password;
 `ulanzictl plugin remove obs` does too.

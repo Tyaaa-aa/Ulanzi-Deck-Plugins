@@ -27,7 +27,7 @@ ulanzictl plugin install ~/ha-plugin
 Create a long-lived access token in Home Assistant: open your profile page (your name, bottom left), scroll
 to the bottom, "Long-lived access tokens", Create token, and copy it. Home Assistant shows it only once.
 
-Or build one file and install it from the app (Settings → Integrations → Install Plugin…, Developer Mode
+Or build one file and install it from the app (Plugins → Install Plugin…, Developer Mode
 on) or with `ulanzictl plugin install`:
 
 ```sh
@@ -36,7 +36,7 @@ scripts/package-plugin.sh plugins/ha     # writes dist/plugins/ha-<version>.ulan
 
 ## Settings
 
-Open Settings → Integrations → Home Assistant in the app and fill in the address and access token. The token
+Open Plugins → Home Assistant in the app (the puzzle button in the top bar) and fill in the address and access token. The token
 goes straight into the plugin's secret store.
 
 ### Without the app
@@ -69,7 +69,7 @@ counts toward the 40-entity limit.
 
 The token is saved in the system keyring on the first start. After that, delete the `token` line and reload
 again. The plugin logs a warning on every start that still finds it. Until you delete the line, or type a token
-under Settings → Integrations → Home Assistant (which removes the line), the token sits in plain text in
+under Plugins → Home Assistant (which removes the line), the token sits in plain text in
 `settings.toml` and in the local backups of it. D-Bus `GetSettings` shows it as `••••` and settings exports
 leave it out. The `forget_token` action deletes the saved token
 (delete the `token` line first, otherwise the next start saves it again);
