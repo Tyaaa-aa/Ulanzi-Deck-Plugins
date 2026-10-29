@@ -1,6 +1,6 @@
 id = "obs"
 name = "OBS Studio"
-version = "1.1.1"
+version = "1.2.0"
 contract = "1.2"
 min_app = "2.1.0"
 tested_on_hardware = true
@@ -82,6 +82,12 @@ style = "list"
 id = "set_scene"
 name = "Switch scene"
 icon = "assets/actions/set_scene.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.scene}", is = ["$scene"] }, background = "#26a269" },
+  { when = { value = "{obs.preview}", is = ["$scene"] }, background = "#c64600" },
+]
+labels = [{ name = "Scene name", text = "$scene" }, { name = "Live scene", text = "{obs.scene}" }]
 params = [
   { key = "scene", kind = "item", picker = "scenes", label = "Scene" },
   { key = "preview", kind = "toggle", label = "Set the preview scene instead (studio mode)" },
@@ -91,6 +97,10 @@ params = [
 id = "toggle_scenes"
 name = "Toggle between two scenes"
 icon = "assets/actions/toggle_scenes.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.scene}", is = ["$a", "$b"] }, label = "{obs.scene}" },
+]
 params = [
   { key = "a", kind = "item", picker = "scenes", label = "First scene" },
   { key = "b", kind = "item", picker = "scenes", label = "Second scene" },
@@ -100,6 +110,10 @@ params = [
 id = "toggle_source"
 name = "Show or hide a source"
 icon = "assets/actions/toggle_source.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.visible.$scene/$source}", is = ["no"] }, color = "#5e5c64", icon = "assets/states/eye-off.svg" },
+]
 params = [
   { key = "scene", kind = "item", picker = "scenes", label = "Scene" },
   { key = "source", kind = "item", picker = "scene_sources", label = "Scene / Source" },
@@ -109,56 +123,108 @@ params = [
 id = "toggle_record"
 name = "Toggle recording"
 icon = "assets/actions/toggle_record.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.rec_paused}", is = ["yes"] }, background = "#c64600", label = "PAUSED" },
+  { when = { value = "{obs.recording}", is = ["yes"] }, background = "#c01c28", label = "REC {obs.rec_time}" },
+]
+labels = [{ name = "Recording time", text = "{obs.rec_time}" }]
 
 [[actions]]
 id = "start_record"
 name = "Start recording"
 icon = "assets/actions/start_record.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.rec_paused}", is = ["yes"] }, background = "#c64600", label = "PAUSED" },
+  { when = { value = "{obs.recording}", is = ["yes"] }, background = "#c01c28", label = "REC {obs.rec_time}" },
+]
+labels = [{ name = "Recording time", text = "{obs.rec_time}" }]
 
 [[actions]]
 id = "stop_record"
 name = "Stop recording"
 icon = "assets/actions/stop_record.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.rec_paused}", is = ["yes"] }, background = "#c64600", label = "PAUSED" },
+  { when = { value = "{obs.recording}", is = ["yes"] }, background = "#c01c28", label = "REC {obs.rec_time}" },
+]
+labels = [{ name = "Recording time", text = "{obs.rec_time}" }]
 
 [[actions]]
 id = "pause_record"
 name = "Pause or resume recording"
 icon = "assets/actions/pause_record.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.rec_paused}", is = ["yes"] }, background = "#c64600", icon = "assets/states/circle-pause.svg" },
+]
 
 [[actions]]
 id = "toggle_stream"
 name = "Toggle streaming"
 icon = "assets/actions/toggle_stream.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.streaming}", is = ["yes"] }, background = "#c01c28", label = "LIVE {obs.stream_time}" },
+]
+labels = [{ name = "Streaming time", text = "{obs.stream_time}" }]
 
 [[actions]]
 id = "start_stream"
 name = "Start streaming"
 icon = "assets/actions/start_stream.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.streaming}", is = ["yes"] }, background = "#c01c28", label = "LIVE {obs.stream_time}" },
+]
+labels = [{ name = "Streaming time", text = "{obs.stream_time}" }]
 
 [[actions]]
 id = "stop_stream"
 name = "Stop streaming"
 icon = "assets/actions/stop_stream.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.streaming}", is = ["yes"] }, background = "#c01c28", label = "LIVE {obs.stream_time}" },
+]
+labels = [{ name = "Streaming time", text = "{obs.stream_time}" }]
 
 [[actions]]
 id = "toggle_replay"
 name = "Toggle replay buffer"
 icon = "assets/actions/toggle_replay.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.replay}", is = ["yes"] }, background = "#26a269" },
+]
 
 [[actions]]
 id = "save_replay"
 name = "Save replay"
 icon = "assets/actions/save_replay.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 
 [[actions]]
 id = "toggle_virtual_cam"
 name = "Toggle virtual camera"
 icon = "assets/actions/toggle_virtual_cam.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.vcam}", is = ["yes"] }, background = "#1c71d8" },
+]
 
 [[actions]]
 id = "toggle_mute"
 name = "Mute or unmute an input"
 icon = "assets/actions/toggle_mute.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+  { when = { value = "{obs.mute.$input}", is = ["yes"] }, background = "#c01c28", icon = "assets/states/mic-off.svg" },
+]
 params = [
   { key = "input", kind = "item", picker = "audio_inputs", label = "Audio input" },
 ]
@@ -167,6 +233,9 @@ params = [
 id = "input_volume"
 name = "Change an input's volume"
 icon = "assets/actions/input_volume.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 params = [
   { key = "input", kind = "item", picker = "audio_inputs", label = "Audio input" },
   { key = "op", kind = "choice", label = "Change", choices = ["up", "down", { value = "mute", label = "Mute or unmute" }, "set"] },
@@ -178,6 +247,9 @@ params = [
 id = "toggle_filter"
 name = "Turn a filter on or off"
 icon = "assets/actions/toggle_filter.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 params = [
   { key = "source", kind = "item", picker = "sources", label = "Source" },
   { key = "filter", kind = "item", picker = "filters", label = "Filter" },
@@ -187,11 +259,17 @@ params = [
 id = "studio_transition"
 name = "Studio mode: transition"
 icon = "assets/actions/studio_transition.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 
 [[actions]]
 id = "set_collection"
 name = "Switch scene collection"
 icon = "assets/actions/set_collection.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 params = [
   { key = "name", kind = "item", picker = "collections", label = "Scene collection" },
 ]
@@ -200,6 +278,9 @@ params = [
 id = "set_profile"
 name = "Switch OBS profile"
 icon = "assets/actions/set_profile.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 params = [
   { key = "name", kind = "item", picker = "profiles", label = "OBS profile" },
 ]
@@ -208,6 +289,9 @@ params = [
 id = "screenshot"
 name = "Take a screenshot"
 icon = "assets/actions/screenshot.svg"
+states = [
+  { when = { value = "{obs.connected}", is = ["no"] }, color = "#5e5c64" },
+]
 
 [[actions]]
 id = "reconnect"
