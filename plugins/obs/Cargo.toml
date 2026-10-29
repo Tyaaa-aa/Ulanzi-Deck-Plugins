@@ -1,5 +1,5 @@
 [package]
-name = "ulanzi-plugin-ha"
+name = "ulanzi-plugin-obs"
 version = "1.0.0"
 edition.workspace = true
 license.workspace = true
@@ -10,11 +10,13 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-ulanzi-plugin = { path = "../../crates/ulanzi-plugin" }
+ulanzi-plugin.workspace = true
 serde_json.workspace = true
+sha2 = "0.11.1"
+base64 = "0.23.1"
 
 [dev-dependencies]
-ulanzi-core = { path = "../../crates/ulanzi-core" }
+ulanzi-core.workspace = true
 
 [lints]
 workspace = true

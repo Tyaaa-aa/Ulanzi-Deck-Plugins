@@ -1,0 +1,29 @@
+[workspace]
+resolver = "3"
+members = ["plugins/obs", "plugins/ha", "tests/host", "tools/release"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Plugins"
+rust-version = "1.99"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+
+# The plugin SDK and the app's crates, at the app commit these plugins are built and tested against.
+# Bump the rev together when a plugin needs something newer from the app.
+[workspace.dependencies]
+ulanzi-plugin = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "13becdfd765807802e963ce251b3cf8363f902a5" }
+ulanzi-core = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "13becdfd765807802e963ce251b3cf8363f902a5" }
+ulanzi-deckd = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "13becdfd765807802e963ce251b3cf8363f902a5" }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tempfile = "3"
+toml = "0.9"
+futures-util = "0.3"
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "handshake"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
