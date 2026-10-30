@@ -1,19 +1,29 @@
 # Home Assistant plugin
 
-Toggles, runs and sets Home Assistant entities from your keys, calls any service, and shows live entity state
-on key labels. It is a sandboxed plugin (contract 1.1) and talks to Home Assistant over its WebSocket API.
-It needs Home Assistant 2022.4 or newer.
+Controls Home Assistant entities from Ulanzi Deck: toggle devices, run scripts and scenes, set
+levels, call any action (service), and show live entity state on keys. The plugin uses the Home
+Assistant WebSocket API and requires Home Assistant 2022.4 or later.
 
-The plugin only talks to Home Assistant on your local network (`lan = true`). That allows `localhost`, names
+The plugin can only connect to Home Assistant on the local network (`lan = true`): `localhost`, names
 ending in `.local`, local-range IP addresses (127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, `::1`,
-`fe80::/10`, `fc00::/7`) and any name that resolves only to local addresses. A name that resolves to even one
-public address is refused (`not allowed: <host>`). The permission does not limit which local host or port the
-plugin dials: it connects to whatever you type in `url`. If Home Assistant is not reachable it retries quietly
-(1 s, doubling to 10 s) and the status says what to check. After "Home Assistant 2022.4 or newer needed." or
-"Home Assistant must be on your local network …" it does not retry by itself: change a setting or run the
-`reconnect` action. The log records why a connection failed (DNS, TLS, message too large), once per reason.
+`fe80::/10`, `fc00::/7`) and names that resolve only to local addresses. A name that resolves to any
+public address is rejected with `not allowed: <host>`. Within the local network, the plugin connects
+to whichever host and port are set in `url`.
 
-## Build and install
+If Home Assistant is unreachable, the plugin retries with backoff (1 s, doubling to 10 s), and its
+status describes what to check. After "Home Assistant 2022.4 or newer needed." or "Home Assistant
+must be on your local network …", it does not retry automatically; change the settings or run the
+`reconnect` action. Connection failures (DNS, TLS, message too large) are logged once per cause.
+
+## Installation
+
+Install the plugin from **Plugins → Discover** in Ulanzi Deck, or with `ulanzictl plugin get ha`.
+
+You also need a long-lived access token. In Home Assistant, open your profile (your name at the
+bottom left), scroll to **Long-lived access tokens**, select **Create token** and copy the token.
+Home Assistant shows it only once.
+
+### Building from source
 
 ```sh
 cargo build --release --target wasm32-wasip2 -p ulanzi-plugin-ha
@@ -24,11 +34,8 @@ ulanzictl plugin dev-mode on
 ulanzictl plugin install ~/ha-plugin
 ```
 
-Create a long-lived access token in Home Assistant: open your profile page (your name, bottom left), scroll
-to the bottom, "Long-lived access tokens", Create token, and copy it. Home Assistant shows it only once.
-
-Or build one file and install it from the app (Plugins → Install Plugin…, Developer Mode
-on) or with `ulanzictl plugin install`:
+To build a package instead, and install it with **Plugins → Install Plugin…** (Developer Mode on)
+or `ulanzictl plugin install`:
 
 ```sh
 scripts/package-plugin.sh plugins/ha     # writes dist/plugins/ha-<version>.ulanziplugin
@@ -36,10 +43,10 @@ scripts/package-plugin.sh plugins/ha     # writes dist/plugins/ha-<version>.ulan
 
 ## Settings
 
-Open Plugins → Home Assistant in the app (the puzzle button in the top bar) and fill in the address and access token. The token
-goes straight into the plugin's secret store.
+In Ulanzi Deck, open **Plugins → Installed → Home Assistant** and enter the address and access
+token. The token is stored in the plugin's secret store.
 
-### Without the app
+### Configuring without the app
 
 Edit `~/.config/ulanzi-deck/settings.toml`, then run `systemctl --user reload ulanzi-deckd`:
 
@@ -61,23 +68,22 @@ attributes = ["climate.living:current_temperature"]   # optional, up to 40
 | `entities` | The entities whose state you want on key labels. In the app you pick them from the entity list. In `settings.toml` a list, or one comma-separated string (the older form, still read). Ids are lowercase (`light.desk`); an entry that is not a valid entity id is skipped with a warning. |
 | `attributes` | Extra attribute values as `entity:attribute`. Optional. |
 
-Only the listed entities are subscribed (Home Assistant sends just those, never the whole install). Actions can
-target any entity id, listed or not. An entity used only in `attributes` is added to the subscription and
-counts toward the 40-entity limit.
+The plugin subscribes only to the listed entities, so Home Assistant never sends the state of the
+whole installation. Actions can target any entity, listed or not. An entity used only in
+`attributes` is added to the subscription and counts toward the 40-entity limit.
 
 ### The token
 
-The token is saved in the system keyring on the first start. After that, delete the `token` line and reload
-again. The plugin logs a warning on every start that still finds it. Until you delete the line, or type a token
-under Plugins → Home Assistant (which removes the line), the token sits in plain text in
-`settings.toml` and in the local backups of it. D-Bus `GetSettings` shows it as `••••` and settings exports
-leave it out. The `forget_token` action deletes the saved token
-(delete the `token` line first, otherwise the next start saves it again);
-`ulanzictl plugin remove ha` does too.
+On first start, the token is saved to the system keyring. Then delete the `token` line and reload
+again; the plugin logs a warning on every start while the line is present. Until the line is removed
+(deleting it manually or entering a token in the app both remove it), the token is stored in plain
+text in `settings.toml` and its local backups. D-Bus `GetSettings` shows it as `••••`, and settings
+exports omit it. The `forget_token` action deletes the saved token (remove the `token` line first,
+or the next start saves it again), as does `ulanzictl plugin remove ha`.
 
-With an `http://` address (the default) or `ws://` the token travels unencrypted on your local network. That is
-how most Home Assistant installs are reached; use `https://` if your certificate is valid for the name you
-type.
+With an `http://` (the default) or `ws://` address, the token is sent unencrypted over the local
+network, which is how most Home Assistant installations are reached. Use `https://` if your
+certificate is valid for the host name you enter.
 
 ## Actions
 
@@ -173,8 +179,8 @@ Limits:
 
 ## Keys for your devices
 
-In the app's action list, the Home Assistant section starts with "Keys for your devices": pick lights, fans,
-air conditioners and more, and each gets keys that fit it, with the plugin's own icons:
+The Home Assistant section of the action list starts with **Keys for your devices**. Select lights,
+fans, air conditioners and other entities, and the plugin creates suitable keys for each:
 
 | Picked | Keys (the extra ones can be left out) |
 |---|---|
@@ -185,18 +191,19 @@ air conditioners and more, and each gets keys that fit it, with the plugin's own
 | Script, scene, button | run |
 | Switch, input boolean, anything else | on/off |
 
-Names that start the same are shortened ("Bedroom Floor Lamp" and "Bedroom Fan" become "Floor Lamp" and
-"Fan"). The picked entities are added to `entities` (and air conditioners' `temperature` to `attributes`), so
-the labels stay live. Search matches every word anywhere, so "bedroom aircon" finds "Bedroom Aircon".
+A shared prefix is removed from names ("Bedroom Floor Lamp" and "Bedroom Fan" become "Floor Lamp"
+and "Fan"). The selected entities are added to `entities`, and air conditioners' `temperature` to
+`attributes`, so the labels stay current. Search matches every word in any order, so "bedroom aircon"
+finds "Bedroom Aircon".
 
-## Keys that follow the device
+## Live key state
 
-With Show Live State on (the default), keys follow their entity: on/off keys turn yellow when on; an
+With Show Live State on (the default), keys reflect their entity. On/off keys turn yellow when on. An
 air conditioner key shows a white thermometer when off, a blue snowflake while cooling, an orange sun
 while heating, droplets while drying and a fan in fan mode. Ready-made light and switch keys also swap
 to an "off" icon in grey. In the key editor, **Label Shows** offers State and Level for on/off and level
 keys, and Target temperature, Room temperature and Mode for air conditioners. Keys add their entity to
-`entities` (and the attributes their label uses to `attributes`) by themselves.
+`entities`, and the attributes their label uses to `attributes`, automatically.
 
 ## Live state
 
@@ -217,31 +224,31 @@ Use these in any key label as `{ha.<key>}`.
 When Home Assistant is not connected, `connected` is `no`, every entity state is `offline`, and all other
 values are empty (`last_error` keeps its last text). Values over 1 KiB are cut.
 
-Key budget: the host allows a plugin 256 different state keys for as long as it runs, with no way to remove
-one. The plugin uses 4 fixed keys, 4 per listed entity and 1 per attribute: at most 40 entities and 40
+Key budget: the host allows each plugin 256 distinct state keys for the lifetime of the process, and
+keys cannot be removed. The plugin uses 4 fixed keys, 4 per listed entity and 1 per attribute: at most 40 entities and 40
 attributes, so at most 204 keys. Every key the plugin has published counts, so editing `entities` many times
 in one run uses keys up even though the old ones go empty. Once all 256 are used, existing keys keep
 updating, new ones get no value and the plugin logs one warning. Disable and enable the plugin (or restart
 `ulanzi-deckd`) to start fresh. Keys over 256 bytes are skipped.
 
-## Not in this plugin (yet)
+## Known limitations
 
-| Item | Why / when |
+| Limitation | Reason |
 |---|---|
-| Discovery (`homeassistant.local` probe, mDNS) | no discovery interface in contract 1.1; a later 1.x |
-| Browser sign-in (OAuth), token refresh | needs the `auth` and `listener` interfaces (later contract) |
-| Areas, icons and pictures in the picker; "What should this key do?" dialog | later; the picker shows name, domain and state |
-| Entity registry, areas, device names, following renames | would need the large `config/entity_registry/list`; only the friendly name is used |
-| State-driven key colours and icons, key faces, widgets (tile, climate, group), sparkline | key faces and widget templates are later contract versions |
-| Dial adjust | no dial event in contract 1.1; a dial turn works as `set_level` with `op = up` / `down` |
-| Nabu Casa and other HTTPS remote URLs | `wss` to a public host needs a `network` entry you cannot edit yet; only `lan = true` ships. HTTPS on your LAN works if the certificate is valid for the name you use |
-| Home Assistant's error as the key's error | the action returns before Home Assistant answers: see `{ha.last_error}` and the log |
-| Service responses, `get_states`, `fire_event`, your own templates | not needed for control and live labels (one fixed template feeds the pickers) |
-| Camera pictures, entity images | need `http` and a canvas |
-| Marketplace listing, screenshots, polish | marketplace milestone |
+| No automatic discovery (`homeassistant.local` probing, mDNS) | Contract 1.2 has no discovery interface; planned for a later 1.x version |
+| No browser sign-in (OAuth) or token refresh | Requires the `auth` and `listener` interfaces from a later contract version |
+| The entity picker shows name, domain and state only, without areas, icons or pictures | Planned |
+| Areas, device names and entity renames are not followed | This would require the large `config/entity_registry/list` response; only the friendly name is used |
+| No custom key faces, widgets (tile, climate, group) or sparklines | Key faces and widget templates arrive in later contract versions |
+| No continuous dial adjustment | Contract 1.2 has no dial event; a dial turn runs `set_level` with `op = up` or `down` |
+| Nabu Casa and other public HTTPS addresses are not supported | `wss` to a public host needs a `network` permission entry; only `lan = true` is shipped. HTTPS on the local network works if the certificate is valid for the host name |
+| Errors returned by Home Assistant are not shown as the key's error | Actions return before Home Assistant responds; see `{ha.last_error}` and the log |
+| No service responses, `get_states`, `fire_event` or custom templates | Not needed for control and live labels; one fixed template supplies the pickers |
+| No camera or entity images | Requires `http` and drawing support |
 
 ## Tests
 
 `cargo test -p ulanzi-plugin-ha` runs the plugin natively against `Harness` ([tests/plugin.rs](tests/plugin.rs))
 and tests the protocol model ([tests/protocol.rs](tests/protocol.rs));
-`cargo test -p ulanzi-deckd --test ha_plugin` runs the built wasm in the host against a mock Home Assistant.
+`cargo test -p host-tests --test ha_plugin` runs the built WebAssembly component in the real plugin host
+against a mock Home Assistant server.

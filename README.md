@@ -1,29 +1,30 @@
 # Ulanzi Deck plugins
 
-Every plugin for [Ulanzi Deck](https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux) lives here, the
-first-party ones included. The app installs them from this repo's releases and checks each package's
-signature first.
+Plugins for [Ulanzi Deck](https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux), including the official
+ones. Ulanzi Deck installs plugins from this repository's releases and verifies each package's
+signature before installing it.
 
-| Plugin | What it does |
+| Plugin | Description |
 |---|---|
 | [OBS Studio](plugins/obs/README.md) | Scenes, recording, streaming, replay buffer, virtual camera and audio, with live state on keys |
 | [Home Assistant](plugins/ha/README.md) | Lights, fans, air conditioners and any entity: toggle, levels, scenes, live state and ready-made keys |
 
-## How it fits together
+## Repository layout
 
 ```text
-plugins/<id>/        a plugin: plugin.toml, src/, assets/ (icons), tests/, README.md
-tests/host/          the plugins running in the real plugin host against mock OBS and Home Assistant
-tools/release/       signs packages and builds the plugin index (used by CI)
-scripts/             package-plugin.sh (build + pack one plugin), release.sh (CI)
+plugins/<id>/        one plugin: plugin.toml, src/, assets/ (icons), tests/, README.md
+tests/host/          integration tests in the real plugin host, against mock OBS and Home Assistant
+tools/release/       package signing and index generation (used by CI)
+scripts/             package-plugin.sh (build and package one plugin), release.sh (CI)
 ```
 
-Plugins are WebAssembly components built with the SDK (`ulanzi-plugin`) from the app's repo. The
-workspace pins the app commit they are built and tested against (`[workspace.dependencies]` in
-`Cargo.toml`); move the pin when a plugin needs something newer. How to write a plugin, the manifest
-and the contract: the app's [plugin guide](https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux/blob/main/docs/plugins.md).
+Plugins are WebAssembly components built with the `ulanzi-plugin` SDK from the app repository. The
+workspace pins the app commit that plugins are built and tested against (`[workspace.dependencies]`
+in `Cargo.toml`); update the pin when a plugin needs newer app features. The contract, manifest
+format and SDK are documented in the app's
+[plugin guide](https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux/blob/main/docs/plugins.md).
 
-## Working on a plugin
+## Development
 
 ```bash
 cargo test --workspace                       # unit tests, then each plugin in the real host
@@ -31,33 +32,34 @@ scripts/package-plugin.sh plugins/ha         # dist/plugins/ha-<version>.ulanzip
 ulanzictl plugin install dist/plugins/ha-<version>.ulanziplugin   # unsigned: needs Developer Mode
 ```
 
-Set `contract` and `min_app` in `plugin.toml` to what the plugin uses: an app older than `min_app`
-refuses it and says which version it needs.
+Set `contract` and `min_app` in `plugin.toml` to match what the plugin uses. App versions older than
+`min_app` refuse to install the plugin and report the required version.
 
 ## Releasing
 
-There is nothing to do by hand. Raise `version` in a plugin's `plugin.toml` and merge to `main`:
+Releases are fully automated. To release a plugin, increase `version` in its `plugin.toml` and merge
+to `main`:
 
 1. CI runs the tests.
-2. For every plugin whose version has no release yet, it builds the package, signs it and publishes
-   the release `<id>-v<version>` with `<id>-<version>.ulanziplugin` and its `.minisig`.
-3. It rebuilds `index.json` (the current version of every plugin, with each package's SHA-256), signs
-   it and puts both on the `index` release. The app reads that index.
+2. For each plugin version without a release, CI builds and signs the package and publishes the
+   release `<id>-v<version>` with `<id>-<version>.ulanziplugin` and its `.minisig`.
+3. CI rebuilds `index.json` (the current version of each plugin, with each package's SHA-256), signs
+   it and uploads both to the `index` release, which the app reads.
 
 Pull requests are tested but never signed.
 
 ## Signing
 
-Packages and the index are signed with [minisign](https://jedisct1.github.io/minisign/) (Ed25519). The
-app has the public key built in:
+Packages and the index are signed with [minisign](https://jedisct1.github.io/minisign/) (Ed25519).
+The app includes the public key:
 
 ```text
 RWT2/HtBKUuAWImA/92lW+GmNaz2nfsNJrxbGrfVmSj/sPyQlngs0pCf
 ```
 
-CI signs with the secret key and its password, kept as the repository's Actions secrets
-`MINISIGN_KEY` and `MINISIGN_PASSWORD`. Workflows can use them; nobody can read them back. Check a
-download yourself:
+CI signs with the secret key and its password, stored as the Actions secrets `MINISIGN_KEY` and
+`MINISIGN_PASSWORD`. Workflows can use them, but their values cannot be read back. To verify a
+download manually:
 
 ```bash
 minisign -Vm ha-1.2.0.ulanziplugin -P RWT2/HtBKUuAWImA/92lW+GmNaz2nfsNJrxbGrfVmSj/sPyQlngs0pCf
@@ -65,16 +67,16 @@ minisign -Vm ha-1.2.0.ulanziplugin -P RWT2/HtBKUuAWImA/92lW+GmNaz2nfsNJrxbGrfVmS
 
 ## Official and third-party plugins
 
-Every plugin names its `author` in `plugin.toml`; the app shows "by <author>" next to it. Plugins made by
-the Ulanzi Deck project are listed in [`OFFICIAL`](OFFICIAL), and only the store's signed index marks
-them **Official** from that list, so a plugin cannot call itself official. Only the maintainers change
-`OFFICIAL`.
+Each plugin declares its `author` in `plugin.toml`, and the app shows it as "by <author>". Plugins
+maintained by the Ulanzi Deck project are listed in [`OFFICIAL`](OFFICIAL). Only the signed store
+index marks plugins as **Official**, based on that file, so a plugin cannot declare itself official.
+Only maintainers can change `OFFICIAL`.
 
-## Adding your plugin
+## Submitting a plugin
 
-Open a pull request with `plugins/<id>/` (source, `plugin.toml`, icons in `assets/`, tests and a
-README). CI builds and tests it; once merged it is signed and listed like the others.
+Open a pull request that adds `plugins/<id>/` with the source, `plugin.toml`, icons in `assets/`,
+tests and a README. CI builds and tests it, and once merged it is signed and listed in the store.
 
-## Licence
+## License
 
 MIT. Icon credits are in each plugin's `assets/CREDITS.md`.

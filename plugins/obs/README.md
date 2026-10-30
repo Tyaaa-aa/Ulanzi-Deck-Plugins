@@ -1,16 +1,25 @@
 # OBS Studio plugin
 
-Controls OBS Studio from your keys and shows its live state on key labels. It is the built-in OBS
-integration rewritten as a sandboxed plugin (obs-websocket 5, OBS 28 or newer). It runs beside the
-built-in integration: obs-websocket accepts several clients, and the label variables do not clash
-(`{obs_scene}` is the built-in one, `{obs.scene}` is this plugin's).
+Controls OBS Studio from Ulanzi Deck and shows its state on keys and on the wide screen. Requires
+OBS 28 or later (obs-websocket 5).
 
-The plugin only talks to OBS on this computer (`network = ["127.0.0.1", "localhost"]`). If OBS is not
-running it retries quietly (1 s, doubling to 10 s) and the status says what to do. The wait goes back to
-1 s only once OBS has answered with its version and scene list, so an OBS that accepts the connection but
-refuses those requests is retried at most every 10 s, not every second.
+The plugin only connects to OBS on the local machine (`network = ["127.0.0.1", "localhost"]`). While
+OBS is not running, it retries with backoff (1 s, doubling to 10 s), and its status describes the
+problem. The retry interval resets to 1 s only after OBS has returned its version and scene list, so
+an OBS instance that accepts the connection but rejects those requests is retried at most every
+10 seconds.
 
-## Build and install
+Profiles from Ulanzi Deck 2.0 are converted to this plugin automatically. The 2.0 label variables
+`{obs_scene}`, `{obs_rec_time}` and `{obs_stream_time}` continue to work.
+
+## Installation
+
+Install the plugin from **Plugins → Discover** in Ulanzi Deck, or with `ulanzictl plugin get obs`.
+
+In OBS, open **Tools → WebSocket Server Settings** and enable the WebSocket server. **Show Connect
+Info** shows the port and password.
+
+### Building from source
 
 ```sh
 cargo build --release --target wasm32-wasip2 -p ulanzi-plugin-obs
@@ -21,11 +30,8 @@ ulanzictl plugin dev-mode on
 ulanzictl plugin install ~/obs-plugin
 ```
 
-In OBS, turn on Tools → WebSocket Server Settings → Enable WebSocket server. Show Connect Info gives the
-port and password.
-
-Or build one file and install it from the app (Plugins → Install Plugin…, Developer Mode
-on) or with `ulanzictl plugin install`:
+To build a package instead, and install it with **Plugins → Install Plugin…** (Developer Mode on)
+or `ulanzictl plugin install`:
 
 ```sh
 scripts/package-plugin.sh plugins/obs     # writes dist/plugins/obs-<version>.ulanziplugin
@@ -33,10 +39,10 @@ scripts/package-plugin.sh plugins/obs     # writes dist/plugins/obs-<version>.ul
 
 ## Settings
 
-Open Plugins → OBS Studio in the app (the puzzle button in the top bar) and fill in the address, port and password. The password
-goes straight into the plugin's secret store.
+In Ulanzi Deck, open **Plugins → Installed → OBS Studio** and enter the address, port and
+password. The password is stored in the plugin's secret store.
 
-### Without the app
+### Configuring without the app
 
 Edit `~/.config/ulanzi-deck/settings.toml`, then run `systemctl --user reload ulanzi-deckd`:
 
@@ -50,16 +56,16 @@ port = 4455
 password = "..."        # only for the first start, see below
 ```
 
-The password is saved in the system keyring on the first start. After that, delete the `password` line
-and reload again: the plugin logs a warning on every start that still finds it. Until you delete the line,
-or type a password under Plugins → OBS Studio (which removes the line), the password sits
-in plain text in `settings.toml` and in the local backups of it. D-Bus `GetSettings` shows it as `••••`
-and settings exports leave it out. The `forget_password` action deletes the saved password;
-`ulanzictl plugin remove obs` does too.
+On first start, the password is saved to the system keyring. Then delete the `password` line and
+reload again; the plugin logs a warning on every start while the line is present. Until the line is
+removed (deleting it manually or entering a password in the app both remove it), the password is
+stored in plain text in `settings.toml` and its local backups. D-Bus `GetSettings` shows it as
+`••••`, and settings exports omit it. The `forget_password` action and `ulanzictl plugin remove obs`
+both delete the saved password.
 
 ## Actions
 
-Use them in `profile.toml` as `type = "plugin"`, `plugin = "obs"`, `action = "<id>"`, `params = { ... }`.
+In `profile.toml`, use `type = "plugin"`, `plugin = "obs"`, `action = "<id>"` and `params = { ... }`.
 
 | Action | Params |
 |---|---|
@@ -101,9 +107,9 @@ params = { scene = "Gameplay" }
 
 ## Pickers
 
-Action params that name something in OBS are picked from a list in the app instead of typed. The lists come
-from what the plugin already knows about OBS (nothing is asked of OBS when a list opens), so they need OBS to
-be connected: otherwise the picker says "Not connected to OBS" and you can still type a name.
+Parameters that refer to an OBS object are selected from a list in the app. Lists are built from
+data the plugin already holds, without querying OBS when a list opens, so OBS must be connected.
+Otherwise the picker reports "Not connected to OBS" and the name can be entered manually.
 
 | Picker | Used by | Entries |
 |---|---|---|
@@ -115,14 +121,14 @@ be connected: otherwise the picker says "Not connected to OBS" and you can still
 | `collections` | `set_collection.name` | scene collections; "Current" for the active one |
 | `profiles` | `set_profile.name` | OBS profiles; "Current" for the active one |
 
-Searching matches part of a name, ignoring case. Filter lists are fetched for at most 200 sources (25
-requests at a time) and refresh when OBS reports a change. They use no state keys.
+Search matches any part of a name, case-insensitively. Filter lists are fetched for at most 200
+sources (25 requests at a time) and refresh when OBS reports a change. They do not use state keys.
 
 ## Live state
 
-Use these in any key label as `{obs.<key>}`. Yes/no values are `yes` or `no`; times are `mm:ss` or
-`h:mm:ss`. When OBS is not connected the yes/no values are `no` and the names, times, stats, `mute.…` and
-`visible.…` values are empty (`last_error` is empty too: going offline forgets it).
+These values are available in key labels as `{obs.<key>}`. Boolean values are `yes` or `no`, and
+times use `mm:ss` or `h:mm:ss`. While OBS is disconnected, boolean values are `no` and names, times,
+statistics, `mute.…`, `visible.…` and `last_error` are empty.
 
 | Key | Value |
 |---|---|
@@ -137,31 +143,34 @@ Use these in any key label as `{obs.<key>}`. Yes/no values are `yes` or `no`; ti
 | `mute.<input>` | `yes` / `no` for each audio input |
 | `visible.<scene>/<source>` | `yes` / `no` for each source in a scene |
 
-`visible.<scene>/<source>` is ambiguous when a scene or source name contains `/` (`a/b` + `c` and `a` +
-`b/c` give the same key), and a source that appears twice in one scene shares one key (`no` if any copy is
-hidden).
+`visible.<scene>/<source>` is ambiguous when a scene or source name contains `/` (`a/b` with `c`
+and `a` with `b/c` produce the same key). A source that appears twice in one scene shares one key,
+which is `no` if any instance is hidden.
 
-Limits: at most 200 `mute.…` and `visible.…` keys at a time, and the host allows a plugin 256 different
-state keys for as long as it runs, with no way to remove one. Every scene, source or input name the plugin
-has published counts, so renaming things or switching scene collections many times uses keys up, even
-though the old ones go empty. Once all 256 are used, new names get no value and the plugin logs one
-warning; disable and enable the plugin (or restart `ulanzi-deckd`) to start fresh. Keys over 256 bytes
-are skipped and values over 1 KiB are cut.
+### Limits
 
-## Not in this plugin (yet)
+- At most 200 `mute.…` and `visible.…` keys at a time.
+- The host allows each plugin 256 distinct state keys for the lifetime of the process, and keys
+  cannot be removed. Every scene, source or input name the plugin publishes counts toward this, so
+  frequent renames or scene collection switches use up keys even though old values become empty.
+  When the limit is reached, new names get no value and the plugin logs a warning. Disabling and
+  re-enabling the plugin, or restarting `ulanzi-deckd`, resets the count.
+- Keys longer than 256 bytes are skipped, and values longer than 1 KiB are truncated.
 
-| Built-in feature | Why not |
+## Known limitations
+
+| Limitation | Reason |
 |---|---|
-| Find OBS settings, auto-detect, enable server | Plugins have no file access |
-| Telling "not installed", "not running", "server off" and "wrong port" apart | The plugin only sees that the connection failed: one combined message |
-| Connecting the moment OBS starts | No process watching: retries at most every 10 s |
-| OBS on another computer | Network permission is local only |
-| Profiles following scene or input renames | Plugins cannot edit profiles |
-| OBS's refusal as the key's error | An action returns before OBS answers: see `{obs.last_error}` and the log |
-| Wrong-password message | The host does not pass the close code, so a close during sign-in reads "OBS closed the connection during sign-in" |
-| Key colours and icons that follow state, the wide-screen widget, `ObsList`, D-Bus `ObsStatus` | Planned for later plugin milestones |
+| No automatic detection of the OBS port and password, and the WebSocket server cannot be enabled from Ulanzi Deck | Plugins have no file system access |
+| "Not installed", "not running", "server disabled" and "wrong port" are reported as one message | The plugin only sees that the connection failed |
+| Connecting can take up to 10 seconds after OBS starts | The plugin cannot watch processes and relies on retries |
+| OBS on another computer is not supported | The network permission is limited to the local machine |
+| Profiles are not updated when scenes or inputs are renamed | Plugins cannot edit profiles |
+| Errors returned by OBS are not shown as the key's error | Actions return before OBS responds; see `{obs.last_error}` and the log |
+| A wrong password is reported as "OBS closed the connection during sign-in" | The host does not pass the WebSocket close code to plugins |
 
 ## Tests
 
-`cargo test -p ulanzi-plugin-obs` runs the plugin natively against `Harness` ([tests/plugin.rs](tests/plugin.rs));
-`cargo test -p ulanzi-deckd --test obs_plugin` runs the built wasm in the host against a mock OBS.
+`cargo test -p ulanzi-plugin-obs` runs the plugin natively with `Harness`
+([tests/plugin.rs](tests/plugin.rs)). `cargo test -p host-tests --test obs_plugin` runs the built
+WebAssembly component in the real plugin host against a mock OBS server.
