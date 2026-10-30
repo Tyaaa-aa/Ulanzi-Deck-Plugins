@@ -63,6 +63,13 @@ download yourself:
 minisign -Vm ha-1.2.0.ulanziplugin -P RWT2/HtBKUuAWImA/92lW+GmNaz2nfsNJrxbGrfVmSj/sPyQlngs0pCf
 ```
 
+## Official and third-party plugins
+
+Every plugin names its `author` in `plugin.toml`; the app shows "by <author>" next to it. Plugins made by
+the Ulanzi Deck project are listed in [`OFFICIAL`](OFFICIAL), and only the store's signed index marks
+them **Official** from that list, so a plugin cannot call itself official. Only the maintainers change
+`OFFICIAL`.
+
 ## Adding your plugin
 
 Open a pull request with `plugins/<id>/` (source, `plugin.toml`, icons in `assets/`, tests and a

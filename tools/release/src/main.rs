@@ -29,9 +29,11 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
         ["sign", file] => sign_from_env(Path::new(file)),
-        ["index", dir, "--repo", repo] => index(Path::new(dir), repo).map(|v| {
-            println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
-        }),
+        ["index", dir, "--repo", repo] => official_ids()
+            .and_then(|official| index(Path::new(dir), repo, &official))
+            .map(|v| {
+                println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
+            }),
         _ => Err("usage: ulanzi-release sign <file> | index <dir> --repo <owner/name>".into()),
     };
     match result {
@@ -92,6 +94,17 @@ fn package_manifest(path: &Path) -> Result<Manifest, String> {
     Manifest::parse(&text).map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// The ids in the repo's `OFFICIAL` file (comments and blank lines skipped).
+fn official_ids() -> Result<Vec<String>, String> {
+    let text = std::fs::read_to_string("OFFICIAL").map_err(|e| format!("OFFICIAL: {e}"))?;
+    Ok(text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .map(str::to_string)
+        .collect())
+}
+
 /// The release tag of a plugin version.
 pub fn tag(id: &str, version: &str) -> String {
     format!("{id}-v{version}")
@@ -99,7 +112,7 @@ pub fn tag(id: &str, version: &str) -> String {
 
 /// The index of every `.ulanziplugin` in `dir`, by id. Each entry points at the plugin's release
 /// in `repo` and carries the package's SHA-256, so signing the index covers every package.
-pub fn index(dir: &Path, repo: &str) -> Result<Value, String> {
+pub fn index(dir: &Path, repo: &str, official: &[String]) -> Result<Value, String> {
     let mut entries = Vec::new();
     let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
         .map_err(|e| format!("{}: {e}", dir.display()))?
@@ -132,6 +145,8 @@ pub fn index(dir: &Path, repo: &str) -> Result<Value, String> {
             "contract": m.contract,
             "min_app": m.min_app,
             "tested_on_hardware": m.tested_on_hardware,
+            "author": m.author,
+            "official": official.contains(&m.id),
             "icon": m.icon.as_deref().filter(|i| i.starts_with("assets/")).map(raw),
             "readme": raw("README.md"),
             "package": {
@@ -208,7 +223,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         package(dir.path(), "obs", "1.1.0");
         package(dir.path(), "ha", "1.2.0");
-        let v = index(dir.path(), "me/repo").expect("index");
+        let v = index(dir.path(), "me/repo", &["ha".to_string()]).expect("index");
         assert_eq!(v["format"], 1);
         let p = v["plugins"].as_array().expect("plugins");
         assert_eq!(p.len(), 2);
@@ -222,10 +237,12 @@ mod tests {
             "https://raw.githubusercontent.com/me/repo/ha-v1.2.0/plugins/ha/assets/icon.svg"
         );
         assert_eq!(p[0]["min_app"], "2.1.0");
+        assert_eq!(p[0]["official"], true, "listed in OFFICIAL");
+        assert_eq!(p[1]["official"], false);
         assert_eq!(p[0]["package"]["sha256"].as_str().map(str::len), Some(64));
         package(dir.path(), "ha", "1.3.0");
         assert!(
-            index(dir.path(), "me/repo").is_err(),
+            index(dir.path(), "me/repo", &[]).is_err(),
             "two versions of one plugin"
         );
     }

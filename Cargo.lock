@@ -1660,6 +1660,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "minisign-verify"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22f9645cb765ea72b8111f36c522475d2daa0d22c957a9826437e97534bc4e9e"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3190,7 +3196,7 @@ dependencies = [
 [[package]]
 name = "ulanzi-core"
 version = "2.1.0"
-source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=13becdfd765807802e963ce251b3cf8363f902a5#13becdfd765807802e963ce251b3cf8363f902a5"
+source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=d713ff25874192984488cd85e1427de75faa2485#d713ff25874192984488cd85e1427de75faa2485"
 dependencies = [
  "chrono",
  "cosmic-text",
@@ -3211,7 +3217,7 @@ dependencies = [
 [[package]]
 name = "ulanzi-deckd"
 version = "2.1.0"
-source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=13becdfd765807802e963ce251b3cf8363f902a5#13becdfd765807802e963ce251b3cf8363f902a5"
+source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=d713ff25874192984488cd85e1427de75faa2485#d713ff25874192984488cd85e1427de75faa2485"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -3220,9 +3226,11 @@ dependencies = [
  "futures-util",
  "inotify",
  "ksni",
+ "minisign-verify",
  "oo7",
  "rustix",
  "rustls",
+ "serde",
  "serde_json",
  "sha2 0.11.1",
  "tempfile",
@@ -3250,7 +3258,7 @@ dependencies = [
 [[package]]
 name = "ulanzi-plugin"
 version = "2.1.0"
-source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=13becdfd765807802e963ce251b3cf8363f902a5#13becdfd765807802e963ce251b3cf8363f902a5"
+source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=d713ff25874192984488cd85e1427de75faa2485#d713ff25874192984488cd85e1427de75faa2485"
 dependencies = [
  "serde_json",
  "wit-bindgen 0.63.0",
@@ -3279,7 +3287,7 @@ dependencies = [
 [[package]]
 name = "ulanzi-proto"
 version = "2.1.0"
-source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=13becdfd765807802e963ce251b3cf8363f902a5#13becdfd765807802e963ce251b3cf8363f902a5"
+source = "git+https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux?rev=d713ff25874192984488cd85e1427de75faa2485#d713ff25874192984488cd85e1427de75faa2485"
 dependencies = [
  "tracing",
  "zip",

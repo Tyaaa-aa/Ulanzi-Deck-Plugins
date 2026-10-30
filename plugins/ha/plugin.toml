@@ -1,9 +1,10 @@
 id = "ha"
 name = "Home Assistant"
-version = "1.2.1"
+version = "1.2.2"
 contract = "1.2"
 min_app = "2.1.0"
 tested_on_hardware = true
+author = "Ulanzi Deck Linux"
 icon = "assets/icon.svg"
 symbolic_icon = "assets/symbolic.svg"
 color = "#18bcf2"

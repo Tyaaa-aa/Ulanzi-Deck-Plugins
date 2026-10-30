@@ -1,9 +1,10 @@
 id = "obs"
 name = "OBS Studio"
-version = "1.2.0"
+version = "1.2.1"
 contract = "1.2"
 min_app = "2.1.0"
 tested_on_hardware = true
+author = "Ulanzi Deck Linux"
 icon = "assets/icon.svg"
 symbolic_icon = "assets/symbolic.svg"
 description = "Scenes, recording, streaming, replay buffer, virtual camera and audio, with live state on key labels."

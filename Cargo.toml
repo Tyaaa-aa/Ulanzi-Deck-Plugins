@@ -17,9 +17,9 @@ unwrap_used = "warn"
 # The plugin SDK and the app's crates, at the app commit these plugins are built and tested against.
 # Bump the rev together when a plugin needs something newer from the app.
 [workspace.dependencies]
-ulanzi-plugin = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "13becdfd765807802e963ce251b3cf8363f902a5" }
-ulanzi-core = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "13becdfd765807802e963ce251b3cf8363f902a5" }
-ulanzi-deckd = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "13becdfd765807802e963ce251b3cf8363f902a5" }
+ulanzi-plugin = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "d713ff25874192984488cd85e1427de75faa2485" }
+ulanzi-core = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "d713ff25874192984488cd85e1427de75faa2485" }
+ulanzi-deckd = { git = "https://github.com/Tyaaa-aa/Ulanzi-Deck-Linux", rev = "d713ff25874192984488cd85e1427de75faa2485" }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 tempfile = "3"
